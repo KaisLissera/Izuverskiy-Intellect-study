@@ -2,17 +2,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # global
-ModelSize = 2
-eta = 0.1
+ModelSize = 1
+eta = 0.5
 BatchSize = 10
-noise = 0.1
-trainSize = 100
+noise = 0.2
+trainSize = 300
 testSize = 10
-w = np.ones((1,ModelSize))
+w = np.zeros(ModelSize)
+b = 0
 
 def Forward(inputs):
-    #np.append(inputs, 1)
-    output = np.sum(np.dot(w, inputs))
+    output = np.sum(np.dot(w, inputs)) + b
     return output
 
 def Mse(outputs, target):
@@ -21,8 +21,9 @@ def Mse(outputs, target):
 
 def BackProp(trainInputs, trainTarget):
     for j in range(trainSize // BatchSize):
-        batchLoss = 0
-        grad = 0
+        # batchLoss = 0
+        dw = 0
+        db = 0
         for i in range(BatchSize):
             input = trainInputs[:, j*BatchSize + i]
             target = trainTarget[j*BatchSize + i]
@@ -30,30 +31,52 @@ def BackProp(trainInputs, trainTarget):
             output = Forward(input)
             error = output - target
 
-            grad += 2 * input*error
-            batchLoss += Mse(output, target)
-        global w
-        w -= eta * grad / BatchSize
+            dw += 2 * input*error
+            db += 2 * error
+            # batchLoss += Mse(output, target)
+        global w, b
+        b -= eta * db / BatchSize
+        w -= eta * dw / BatchSize
 
 #-----------------------------------------------------------------------
 
-x0 = np.ones((1, trainSize))
-x1 = np.linspace(0, 1, trainSize)
-x = np.append(x0, x1).reshape(ModelSize, trainSize)
+def CreateRegressionDataset(signal):
+    dataset = np.zeros((ModelSize, len(signal)))
+    for i in range(len(signal)):
+        for j in range(0, ModelSize):
+            if (i - j) < 0:
+                dataset[j, i] = 0
+            else:
+                dataset[j, i] = signal[i - j]
+    return dataset
 
-y =  1 + x1**2 + np.random.uniform(-noise, noise, trainSize)
+def LagPlot(data):
+    lagSize = 1
+    x_lag = np.zeros(len(data) - lagSize)
+    y_lag = np.zeros(len(data) - lagSize)
+    for i in range(len(data) - lagSize):
+        x_lag[i] = data[i]
+        y_lag[i] = data[i + lagSize]
+    plt.plot(x_lag, y_lag, 'ro')
+    plt.show()
 
-for i in range(1):
-    BackProp(x, y)
+#-----------------------------------------------------------------------
+x = np.linspace(0, 1, trainSize)
+y =  -0 + x**1 + np.random.uniform(-noise, noise, trainSize)
+# trainDataset = CreateRegressionDataset(x)
 
-x0_t = np.ones((1, testSize))
-x1_t = np.linspace(0, 1, testSize)
-x_t = np.append(x0_t, x1_t).reshape(ModelSize, testSize)
+# lag plot
+# LagPlot(y)
 
-y_test = x1_t
-for i in range(testSize):
-    y_test[i] = Forward(x_t[:,i])
+for i in range(10):
+    BackProp(x.reshape(1, trainSize), y)
 
-plt.plot(x[1,:], y, 'bo')
-plt.plot(x_t[1,:], y_test, 'ro')
+print("b = ", b," w = ", w)
+
+y_test = np.array(x)
+for i in range(len(y_test)):
+    y_test[i] = Forward(x[i])
+
+plt.plot(x, y, 'b')
+plt.plot(x, y_test, 'r')
 plt.show()
