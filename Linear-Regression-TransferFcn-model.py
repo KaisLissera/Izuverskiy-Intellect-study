@@ -2,27 +2,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # global
-ModelSize = 11
-eta = 0.1
-BatchSize = 10
-noise = 0.4
-trainSize = 100
+ModelSize = 10
+eta = 0.05
+BatchSize = 5
+noise = 0.9
+trainSize = 200
 testSize = 10
-w = np.ones((1, ModelSize))
+lmda = 0.001
+w = np.zeros(ModelSize)
+b = 0
 
 def Forward(inputs):
-    #np.append(inputs, 1)
-    output = np.sum(np.dot(w, inputs))
+    output = np.sum(np.dot(w, inputs)) + b
     return output
 
 def Mse(outputs, target):
-    mse = (1/ModelSize) * np.sum(np.square(target - outputs))
+    mse = np.sum(np.square(target - outputs))
     return mse
 
 def BackProp(trainInputs, trainTarget):
+    loss = np.zeros(trainSize // BatchSize)
     for j in range(trainSize // BatchSize):
         batchLoss = 0
-        grad = 0
+        dw = 0
+        db = 0
         for i in range(BatchSize):
             input = trainInputs[:, j*BatchSize + i]
             target = trainTarget[j*BatchSize + i]
@@ -30,16 +33,19 @@ def BackProp(trainInputs, trainTarget):
             output = Forward(input)
             error = output - target
 
-            grad += 2 * input*error
+            dw += 2 * input*error
+            db += 2 * error
             batchLoss += Mse(output, target)
-        global w
-        w -= eta * grad / BatchSize
+        global w, b
+        b -= eta * db / BatchSize
+        w -= eta * dw / BatchSize
+        loss[j] = batchLoss / BatchSize
+    return loss
 
 def CreateDataset(signal):
     dataset = np.zeros((ModelSize, len(signal)))
     for i in range(len(signal)):
-        dataset[ModelSize - 1, i] = 1
-        for j in range(0, ModelSize - 1):
+        for j in range(0, ModelSize):
             if (i - j) < 0:
                 dataset[j, i] = 0
             else:
@@ -92,8 +98,13 @@ trainData = CreateDataset(signal)
 testData = CreateDataset(signalTest)
 
 # Training
-for i in range(20):
-    BackProp(trainData, trainTarget)
+loss = np.array(())
+for i in range(100):
+    loss_tmp = BackProp(trainData, trainTarget)
+    loss = np.append(loss, loss_tmp)
+plt.plot(loss, )
+plt.yscale('log')
+plt.show()
 
 # Testing
 testOut = np.array(signalTest)
