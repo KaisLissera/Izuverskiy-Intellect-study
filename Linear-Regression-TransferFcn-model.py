@@ -5,10 +5,9 @@ import matplotlib.pyplot as plt
 ModelSize = 10
 eta = 0.05
 BatchSize = 5
-noise = 0.9
+noise = 0.1
 trainSize = 200
 testSize = 10
-lmda = 0.001
 w = np.zeros(ModelSize)
 b = 0
 
@@ -67,29 +66,28 @@ def TransferFcn(signal):
                 out[i] += transferFcnParams[j]*signal[i - j]
     return out
 
+def Step(time, position = 0.5):
+    signal = np.array(time) 
+    for i in range(len(time)):
+        if(i > len(time)*position):
+            signal[i] = 0
+        else:
+            signal[i] = 1
+    return signal
+
 #-----------------------------------------------------------------------
 time = np.linspace(0, 10, trainSize)
 # Train step signal
-signal = np.array(time) 
-for i in range(len(time)):
-    if(i > trainSize/2):
-        signal[i] = 0
-    else:
-        signal[i] = 1
-
+signal = Step(time)
 # Test step signal
-signalTest = np.array(time)
-for i in range(len(time)):
-    if(i > trainSize/3):
-        signalTest[i] = 0
-    else:
-        signalTest[i] = 1
+signalTest = Step(time, 0.3)
 
 signal = signal + np.random.uniform(-noise, noise, trainSize)
 signalTest = signalTest + np.random.uniform(-0.1, 0.1, trainSize)
 
 # Transfer Fcn
 trainTarget = TransferFcn(signal)
+# trainTarget = trainTarget + np.random.uniform(-0.2, 0.2, trainTarget.shape)
 testTarget = TransferFcn(signalTest)
 
 # Creating training data
@@ -99,10 +97,10 @@ testData = CreateDataset(signalTest)
 
 # Training
 loss = np.array(())
-for i in range(100):
+for i in range(10):
     loss_tmp = BackProp(trainData, trainTarget)
     loss = np.append(loss, loss_tmp)
-plt.plot(loss, )
+plt.plot(loss)
 plt.yscale('log')
 plt.show()
 

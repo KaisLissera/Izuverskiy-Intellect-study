@@ -11,6 +11,7 @@ testSize = 10
 w = np.zeros(ModelSize)
 b = 0
 
+#-----------------------------------------------------------------------
 def Forward(inputs):
     output = np.sum(np.dot(w, inputs)) + b
     return output
@@ -39,7 +40,6 @@ def BackProp(trainInputs, trainTarget):
         w -= eta * dw / BatchSize
 
 #-----------------------------------------------------------------------
-
 def CreateRegressionDataset(signal):
     dataset = np.zeros((ModelSize, len(signal)))
     for i in range(len(signal)):
@@ -63,9 +63,6 @@ def LagPlot(data):
 #-----------------------------------------------------------------------
 x = np.linspace(0, 1, trainSize)
 y =  -0 + x**1 + np.random.uniform(-noise, noise, trainSize)
-# trainDataset = CreateRegressionDataset(x)
-
-# lag plot
 # LagPlot(y)
 
 for i in range(10):
